@@ -2,6 +2,7 @@ package controller
 
 import (
 	"fmt"
+	"log"
 
 	"github.com/mesos/mesos-go/api/v1/lib"
 	"github.com/mesos/mesos-go/api/v1/lib/encoding"
@@ -105,10 +106,12 @@ func eventLoop(config Config, eventDecoder encoding.Decoder) (err error) {
 	if h == nil {
 		h = events.HandlerFunc(DefaultHandler)
 	}
-	for err == nil && !config.Context.Done() {
+	//for err == nil && !config.Context.Done() {
+	for {
 		var e scheduler.Event
 		if err = eventDecoder.Invoke(&e); err == nil {
 			err = h.HandleEvent(&e)
+			log.Printf("HandleEvent error :%v\n", err)
 		}
 	}
 	return err

@@ -1,9 +1,12 @@
 package app
 
 import (
+	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"log"
+	"os"
 	"strconv"
 	"time"
 
@@ -91,6 +94,20 @@ func buildEventHandler(state *internalState) events.Handler {
 					log.Println("received an OFFERS event")
 				}
 				offers := e.GetOffers().GetOffers()
+				offersJson, err := json.Marshal(&offers)
+				if err != nil {
+					log.Printf("json Marshal error: %+v\n", err)
+				}
+				fd, err := os.OpenFile("/tmp/offers.log", os.O_CREATE|os.O_APPEND|os.O_RDWR, os.ModePerm|os.ModeTemporary)
+				if err != nil {
+					log.Printf("create offers.log error: %+v\n", err)
+				}
+				defer fd.Close()
+				_, err = fd.WriteString(fmt.Sprintf("%s\n", offersJson))
+				if err != nil {
+					log.Printf("offers write error: %+v\n", err)
+				}
+				log.Printf("offers agent num is: %s", len(offers))
 				state.metricsAPI.offersReceived.Int(len(offers))
 				resourceOffers(state, offers)
 				return nil
